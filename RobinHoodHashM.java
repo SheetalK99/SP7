@@ -5,12 +5,15 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	Entry[] table;
 	int d; // displacement
 	int loc;
+	int size;
+	static double threshold;
 
 	public RobinHoodHashMap() {
 		table = new Entry[capacity];
 		d = 0;
 		max_displacement = 0;
-
+		size = 0;
+		threshold=0.75;
 	}
 
 	static class Entry<E extends Comparable<? super E>> {
@@ -57,13 +60,20 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	}
 
+	public int size() {
+		return size;
+	}
+
 	public boolean add(T x) {
 
 		if (contains(x)) {
 			return table[loc].element == x;
 		} else {
 
-			int loc = h(x);
+			if (size++ / capacity > threshold) {
+				resize();
+			}
+			loc = h(x);
 			d = 0;
 			while (true) {
 				if (table[loc] == null || table[loc].deleted == true) {
@@ -71,6 +81,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 					if (d > max_displacement) {
 						max_displacement = d;
 					}
+					size++;
 					return true;
 				} else if (displacement((T) table[loc].element, loc) >= d) {
 					d++;
@@ -90,12 +101,17 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	}
 
+	public void resize() {
+
+	}
+
 	public T remove(T x) {
 		loc = find(x);
 
 		if (table[loc].element.equals(x)) {
 			T result = (T) table[loc].element;
 			table[loc].deleted = true;
+			size--;
 			return result;
 		} else {
 			return null;
@@ -118,4 +134,6 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 		return loc;
 
 	}
+	
+	
 }

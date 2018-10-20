@@ -1,4 +1,5 @@
 
+
 public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	static int capacity = 16;
 	static int max_displacement;
@@ -10,6 +11,9 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	public RobinHoodHashMap() {
 		table = new Entry[capacity];
+		for(int i=0;i<capacity;i++) {
+			table[i]=new Entry(null);
+		}
 		d = 0;
 		max_displacement = 0;
 		size = 0;
@@ -51,7 +55,8 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	}
 
 	public boolean contains(T x) {
-		return false;
+		loc=find(x);
+		return table[loc].element == x;
 	}
 
 	public int displacement(T x, int loc) {
@@ -67,7 +72,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	public boolean add(T x) {
 
 		if (contains(x)) {
-			return table[loc].element == x;
+			return false;
 		} else {
 
 			if (size++ / capacity > threshold) {
@@ -76,7 +81,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 			loc = h(x);
 			d = 0;
 			while (true) {
-				if (table[loc] == null || table[loc].deleted == true) {
+				if (table[loc].element == null || table[loc].deleted == true) {
 					table[loc].element = x;
 					if (d > max_displacement) {
 						max_displacement = d;
@@ -108,7 +113,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	public T remove(T x) {
 		loc = find(x);
 
-		if (table[loc].element.equals(x)) {
+		if (table[loc].element==x) {
 			T result = (T) table[loc].element;
 			table[loc].deleted = true;
 			size--;
@@ -122,8 +127,8 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	public int find(T x) {
 		loc = h(x);
 		int count = 0;
-		while (count < max_displacement) {
-			if (table[loc].element.equals(x)) {
+		while (count <= max_displacement) {
+			if (table[loc].element==x) {
 				break;
 			} else {
 				loc++;
@@ -133,6 +138,28 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 		}
 		return loc;
 
+	}
+	
+	public void printList() {
+		for(int i=0;i<table.length;i++) {
+			System.out.println(table[i].element);
+		}
+	}
+	
+	public static void main(String[] args) {
+		RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
+		map.add(10);
+		map.add(12);
+		map.add(13);
+		map.add(14);
+		map.add(10000);
+		map.add(10);
+		System.out.println(map.remove(55));
+
+		System.out.println(map.remove(13));
+		System.out.println(map.contains(12));
+		map.printList();
+		
 	}
 	
 	

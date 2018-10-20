@@ -1,10 +1,17 @@
-# SP7
-package sak170006;
 
 public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	static int capacity = 16;
-	Entry[] table = new Entry[capacity];
-	int d = 0; // displacement
+	static int max_displacement;
+	Entry[] table;
+	int d; // displacement
+	int loc;
+
+	public RobinHoodHashMap() {
+		table = new Entry[capacity];
+		d = 0;
+		max_displacement = 0;
+
+	}
 
 	static class Entry<E extends Comparable<? super E>> {
 		E element;
@@ -53,14 +60,17 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	public boolean add(T x) {
 
 		if (contains(x)) {
-			return false;
+			return table[loc].element == x;
 		} else {
 
 			int loc = h(x);
 			d = 0;
 			while (true) {
-				if (table[loc] == null || table[loc].deleted == false) {
+				if (table[loc] == null || table[loc].deleted == true) {
 					table[loc].element = x;
+					if (d > max_displacement) {
+						max_displacement = d;
+					}
 					return true;
 				} else if (displacement((T) table[loc].element, loc) >= d) {
 					d++;
@@ -80,4 +90,32 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	}
 
+	public T remove(T x) {
+		loc = find(x);
+
+		if (table[loc].element.equals(x)) {
+			T result = (T) table[loc].element;
+			table[loc].deleted = true;
+			return result;
+		} else {
+			return null;
+		}
+
+	}
+
+	public int find(T x) {
+		loc = h(x);
+		int count = 0;
+		while (count < max_displacement) {
+			if (table[loc].element.equals(x)) {
+				break;
+			} else {
+				loc++;
+				count++;
+			}
+
+		}
+		return loc;
+
+	}
 }

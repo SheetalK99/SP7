@@ -1,25 +1,28 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashSet;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 
 public class RobinHoodHashMap<T extends Comparable<? super T>> {
-	static int capacity = 16;
+	static int capacity;
 	static int max_displacement;
 	Entry[] table;
-	int d; // displacement
+
 	int loc;
-	int size;
-	static double threshold;
+	static int size;
+	static double threshold // threshold capacity after which rehashing and size doubled;
 
 	public RobinHoodHashMap() {
+		capacity = 16;
 		table = new Entry[capacity];
 		for (int i = 0; i < capacity; i++) {
 			table[i] = new Entry(null);
 		}
-		d = 0;
 		max_displacement = 0;
 		size = 0;
-		threshold = 0.75;
+		threshold = 0.75; 
 	}
 
 	static class Entry<E extends Comparable<? super E>> {
@@ -48,7 +51,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	}
 
 	static int indexFor(int h, int length) { // length = table.length is a power of 2
-		return h & (length - 1);
+		return h & (length);
 	}
 	// Key x is stored at table[ hash( x.hashCode( ) ) & ( table.length − 1 ) ].
 
@@ -63,11 +66,11 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	public int displacement(T x, int loc) {
 		// Calculate displacement of x from its ideal location of h( x ).
-		return loc >= h(x) ? loc - h(x) : table.length + loc - h(x);
+		return loc >= h(x) ? loc - h(x) : table.length - 1 + loc - h(x);
 
 	}
 
-	public int size() {
+	public static int size() {
 		return size;
 	}
 
@@ -77,20 +80,22 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 			return false;
 		} else {
 
-			if (size++ / capacity > threshold) {
+			if ((size + 1) / capacity > threshold) {
 				resize();
 			}
 			loc = h(x);
-			d = 0;
+
+			int d = 0;
 			while (true) {
 				if (table[loc].element == null || table[loc].deleted == true) {
-					table[loc].element = x;
+					table[loc].element = x; // if loc is empty
 					if (d > max_displacement) {
-						max_displacement = d;
+						max_displacement = d; 
 					}
 					size++;
 					return true;
 				} else if (displacement((T) table[loc].element, loc) >= d) {
+					// if x has smaller displacement thab element at loc
 					d++;
 					loc = (loc + 1) % table.length;
 				} else {
@@ -112,7 +117,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 		Entry[] temp = table;
 		table = new Entry[capacity * 2];
 		capacity = capacity * 2;
-
+		// double capacity
 		// initialize array objects
 
 		for (int i = 0; i < capacity; i++) {
@@ -123,6 +128,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 		while (count-- > 0) {
 			if (temp[count].element != null) {
+				// rehashing
 				add((T) temp[count].element);
 			}
 
@@ -147,6 +153,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	public int find(T x) {
 		loc = h(x);
 		int count = 0;
+		// check for x for loc+max_displacement steps
 		while (count <= max_displacement) {
 			if (table[loc].element == x) {
 				break;
@@ -160,83 +167,81 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	}
 
+	static <T> int distinctElements(T[] arr) {
+		RobinHoodHashMap<Integer> map1 = new RobinHoodHashMap<>();
+		for (int i = 0; i < arr.length; i++) {
+			map1.add((Integer) arr[i]);
+		}
+
+		return size();
+
+	}
+
 	public void printList() {
 		for (int i = 0; i < table.length; i++) {
-			System.out.println(table[i].element);
+			System.out.println(i + ":" + table[i].element);
 		}
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
-		RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
-		/*
-		map.add(10);
-		map.add(12);
-		map.add(13);
-		map.add(14);
-		map.add(10000);
-		map.add(10);
-		map.add(13);
-		map.add(144);
-		map.add(10000);
-		map.add(1001);
-		map.add(101);
-		map.add(121);
-		map.add(131);
-		map.add(141);
-		map.add(100001);
-		map.add(101);
-		map.add(131);
-		map.add(1441);
-		map.add(100001);
-		map.add(1001);
-		System.out.println(map.remove(55));
+		// RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
 
-		System.out.println(map.remove(13));
-		System.out.println(map.contains(12));
-		System.out.println(map.remove(1441));
-		System.out.println(map.contains(1001));
-		*/
-	
-		//map.printList();
-		Scanner sc;
-		  File file = new File("F:\\UT Dallas\\Courses\\Sem1-Fall18\\Implementation of Data Structures\\LP\\LP2\\Starter\\Test\\lp2-t03.txt");
-		    sc = new Scanner(file);
-		
-		String operation = "";
-		long operand = 0;
-		int modValue = 999983;
-		long result = 0;
-		Long returnValue = null;
-		
-		while (!((operation = sc.next()).equals("End"))) {
-		    switch (operation) {
-		    case "Add": {
-			operand = sc.nextLong();
-			if(map.add((int) operand)) {
-			    result = (result + 1) % modValue;
-			}
-			break;
-		    }
-		    case "Remove": {
-			operand = sc.nextLong();
-			if (map.remove((int) operand) != null) {
-			    result = (result + 1) % modValue;
-			}
-			break;
-		    }
-		    case "Contains":{
-			operand = sc.nextLong();
-			if (map.contains((int) operand)) {
-			    result = (result + 1) % modValue;
-			}
-			break;
-		    }
-			
-		    }
+		// Testing with random numbers
+		Random rand = new Random();
+		Integer eval_arr[] = new Integer[1000000];
+
+		for (int i = 0; i < 1000000; i++) {
+			eval_arr[i] = rand.nextInt();
+		}
+		Timer timer1 = new Timer();
+		// check distinct number of elements
+		System.out.println(RobinHoodHashMap.distinctElements(eval_arr));
+		timer1.end();
+		System.out.println(timer1);
+
+		Set<Integer> set1 = new HashSet<Integer>();
+
+		Timer timer2 = new Timer();
+
+		for (int i = 0; i < eval_arr.length; i++) {
+			set1.add((Integer) eval_arr[i]);
 		}
 
+		timer2.end();
+		System.out.println(timer2);
+		/*
+		 * map.add(512); map.add(310); map.add(261); map.printList();
+		 * 
+		 * 
+		 * /* map.add(14); map.add(10000); map.add(10); map.add(13); map.add(144);
+		 * map.add(10000); map.add(1001); map.add(101); map.add(121); map.add(131);
+		 * map.add(141); map.add(100001); map.add(101); map.add(131); map.add(1441);
+		 * map.add(100001); map.add(1001); System.out.println(map.remove(55));
+		 * 
+		 * System.out.println(map.remove(13)); System.out.println(map.contains(12));
+		 * System.out.println(map.remove(1441)); System.out.println(map.contains(1001));
+		 */
 
-		map.printList();
+		// map.printList();
+		/*
+		 * Scanner sc; File file = new File(
+		 * "F:\\UT Dallas\\Courses\\Sem1-Fall18\\Implementation of Data Structures\\SP\\SP7\\test_file.txt"
+		 * ); sc = new Scanner(file);
+		 * 
+		 * String operation = ""; long operand = 0; int modValue = 999983; long result =
+		 * 0; Long returnValue = null;
+		 * 
+		 * while (!((operation = sc.next()).equals("End"))) { switch (operation) { case
+		 * "Add": { operand = sc.nextLong(); if (map.add((int) operand)) { result =
+		 * (result + 1) % modValue; } break; } case "Remove": { operand = sc.nextLong();
+		 * if (map.remove((int) operand) != null) { result = (result + 1) % modValue; }
+		 * break; } case "Contains": { operand = sc.nextLong(); if (map.contains((int)
+		 * operand)) { result = (result + 1) % modValue; } break; }
+		 * 
+		 * } }
+		 * 
+		 * ;
+		 */
 	}
 
 }

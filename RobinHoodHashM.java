@@ -12,10 +12,10 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 	int loc;
 	static int size;
-	static double threshold // threshold capacity after which rehashing and size doubled;
+	static double threshold; // threshold capacity after which rehashing and size doubled;
 
 	public RobinHoodHashMap() {
-		capacity = 16;
+		capacity = 2;
 		table = new Entry[capacity];
 		for (int i = 0; i < capacity; i++) {
 			table[i] = new Entry(null);
@@ -80,7 +80,7 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 			return false;
 		} else {
 
-			if ((size + 1) / capacity > threshold) {
+			if (((size + 1) / capacity) > threshold) {
 				resize();
 			}
 			loc = h(x);
@@ -125,36 +125,24 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 		}
 
 		int count = temp.length - 1;
+		size=0;
 
-		while (count-- > 0) {
+		while (count >= 0) {
 			if (temp[count].element != null) {
 				// rehashing
 				add((T) temp[count].element);
 			}
-
+			count--;
 		}
 
 	}
 
-	public T remove(T x) {
-		loc = find(x);
-
-		if (table[loc].element == x) {
-			T result = (T) table[loc].element;
-			table[loc].deleted = true;
-			size--;
-			return result;
-		} else {
-			return null;
-		}
-
-	}
-
+	
 	public int find(T x) {
 		loc = h(x);
 		int count = 0;
 		// check for x for loc+max_displacement steps
-		while (count <= max_displacement) {
+		while (count <= max_displacement && max_displacement!=0) {
 			if (table[loc].element == x) {
 				break;
 			} else {
@@ -172,8 +160,21 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 		for (int i = 0; i < arr.length; i++) {
 			map1.add((Integer) arr[i]);
 		}
-
+		System.out.println(map1.table.length);
 		return size();
+
+	}
+	public T remove(T x) {
+		loc = find(x);
+
+		if (table[loc].element == x) {
+			T result = (T) table[loc].element;
+			table[loc].deleted = true;
+			size--;
+			return result;
+		} else {
+			return null;
+		}
 
 	}
 
@@ -184,15 +185,17 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
-		// RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
+		 RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
 
 		// Testing with random numbers
 		Random rand = new Random();
-		Integer eval_arr[] = new Integer[1000000];
+		Integer eval_arr[] = new Integer[40];
 
-		for (int i = 0; i < 1000000; i++) {
+		for (int i = 0; i < 40; i++) {
 			eval_arr[i] = rand.nextInt();
 		}
+		
+		
 		Timer timer1 = new Timer();
 		// check distinct number of elements
 		System.out.println(RobinHoodHashMap.distinctElements(eval_arr));
@@ -209,7 +212,44 @@ public class RobinHoodHashMap<T extends Comparable<? super T>> {
 
 		timer2.end();
 		System.out.println(timer2);
+	/*	
+		for (int i = 0; i < eval_arr.length; i++) {
+			System.out.println(eval_arr[i]+":"+map.add((Integer) eval_arr[i]));
+		}
+*/
+		
+		/*for (int i = 0; i < eval_arr.length; i++) {
+			System.out.println(eval_arr[i]+":"+map.contains((Integer) eval_arr[i]));
+		}*/
+
+
+		System.out.println(set1.size());
+		
 		/*
+		map.add(-1619053230);
+		map.add(-1139597371);
+		map.add(-1518982680);
+		map.add(2127260777);
+		map.add(1068144905);
+		map.add(-360145701);
+		map.add(100713508);
+		map.add(-1281306626);
+		map.add(-2025046130);
+		map.add(1226394489);
+		map.add(264513491);
+		map.add(792809967);
+		map.add(-557969103);
+		map.add(1776174614);
+		map.add(168902457);
+		map.add(751892086);
+		map.add(-877631327);
+		map.add(1910703821);
+		map.add(-847410232);
+		map.add(-502184080);
+
+		map.printList();
+		System.out.println(map.size());
+		
 		 * map.add(512); map.add(310); map.add(261); map.printList();
 		 * 
 		 * 

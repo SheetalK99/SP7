@@ -1,13 +1,13 @@
 public static void main(String[] args) throws FileNotFoundException {
-		// RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
-
+		RobinHoodHashMap<Integer> map = new RobinHoodHashMap<>();
 		// Testing with random numbers
 		Random rand = new Random();
 		Integer eval_arr[] = new Integer[1000000];
 
-		for (int i = 0; i < 1000000; i++) {
+		for (int i = 0; i < eval_arr.length; i++) {
 			eval_arr[i] = rand.nextInt();
 		}
+		
 		Timer timer1 = new Timer();
 		// check distinct number of elements
 		System.out.println(RobinHoodHashMap.distinctElements(eval_arr));
@@ -21,27 +21,48 @@ public static void main(String[] args) throws FileNotFoundException {
 		for (int i = 0; i < eval_arr.length; i++) {
 			set1.add((Integer) eval_arr[i]);
 		}
+		//System.out.println(set1.size());
 
 		timer2.end();
 		System.out.println(timer2);
 		
 		Timer timer3 = new Timer();
-
-		for (int i = 0; i < eval_arr.length; i++) {
-			set1.remove((Integer) eval_arr[i]);
+		
+		for (int i=0;i<eval_arr.length;i++) {
+			eval_arr[i] = rand.nextInt();
+			map.remove((Integer) eval_arr[i]);
 		}
-
 		timer3.end();
 		System.out.println(timer3);
 
+		
 		Timer timer4 = new Timer();
-
 		for (int i = 0; i < eval_arr.length; i++) {
-			set1.contains((Integer) eval_arr[i]);
+			set1.remove((Integer) eval_arr[i]);
 		}
-
+		
 		timer4.end();
 		System.out.println(timer4);
 
 		
-	}
+		
+		Timer timer5 = new Timer();
+		
+		for (int i=0;i<eval_arr.length;i++) {
+			eval_arr[i] = rand.nextInt();
+			map.contains((Integer) eval_arr[i]);
+		}
+		timer5.end();
+		System.out.println(timer5);
+
+		
+		Timer timer6 = new Timer();
+		for (int i = 0; i < eval_arr.length; i++) {
+			set1.contains((Integer) eval_arr[i]);
+		}
+		timer6.end();
+		System.out.println(timer6);
+
+		
+	}	
+	

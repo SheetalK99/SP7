@@ -15,6 +15,7 @@ import rbk.Graph.Timer;
 
 import java.io.File;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -30,10 +31,10 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		public DFSVertex(Vertex u) {
 			seen = false;
 			parent = null;
-			cno=0;
+			cno = 0;
 
 		}
-		
+
 		public DFSVertex make(Vertex u) {
 			return new DFSVertex(u);
 		}
@@ -45,15 +46,18 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 
 	// check later
 	public void dfs(Graph g) {
+		int old_no = 0;
 		for (Vertex u : g) {
 			if (!get(u).seen) {
-				dfsVisit(u, ++(get(u).cno));
+				dfsVisit(u, (get(u).cno) + old_no + 1);
+				old_no = get(u).cno;
 			}
 		}
 	}
 
 	private void dfsVisit(Vertex u, int cno) {
 		get(u).seen = true;
+		get(u).cno = cno;
 		for (Edge e : g.incident(u)) {
 			if (!get(e.toVertex()).seen) {
 				get(e.toVertex()).parent = u;
@@ -69,21 +73,26 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 
 		DFS d = new DFS(g);
 		d.dfs(g);
-		d.printList();
-		
-		return null;
+
+		return d;
 	}
 
 	// Member function to find topological order
 	public List<Vertex> topologicalOrder1() {
-		return null;
+		return finish_list;
 	}
 
 	// Find the number of connected components of the graph g by running dfs.
 	// Enter the component number of each vertex u in u.cno.
 	// Note that the graph g is available as a class field via GraphAlgorithm.
 	public int connectedComponents() {
-		return 0;
+		int max = 0;
+		for (Vertex u : g) {
+			if (get(u).cno > max) {
+				max = get(u).cno;
+			}
+		}
+		return max;
 	}
 
 	// After running the onnected components algorithm, the component no of each
@@ -95,6 +104,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	// Find topological oder of a DAG using DFS. Returns null if g is not a DAG.
 	public static List<Vertex> topologicalOrder1(Graph g) {
 		DFS d = new DFS(g);
+		d.dfs(g);
 		return d.topologicalOrder1();
 	}
 
@@ -115,22 +125,26 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		Graph g = Graph.readGraph(in);
 		g.printGraph(false);
 
-		DFS d = new DFS(g);
-		d.depthFirstSearch(g);
+		// DFS d = new DFS(g);
+		DFS d = depthFirstSearch(g);
 		int numcc = d.connectedComponents();
 		System.out.println("Number of components: " + numcc + "\nu\tcno");
 		for (Vertex u : g) {
 			System.out.println(u + "\t" + d.cno(u));
 		}
+
+		List topological_order=DFS.topologicalOrder1(g);
+		
+		
+		// Generate an iterator. Start just after the last element.
+		ListIterator li = topological_order.listIterator(topological_order.size());
+
+		// Iterate in reverse.
+		System.out.println("Topological Order:");
+		while(li.hasPrevious()) {
+			
+		  System.out.print(li.previous());
+		}
 	}
 
-	private void printList() {
-		for(Vertex u: finish_list) {
-			System.out.print(u);
-		}
-		
-		for (Vertex u : g) {
-			System.out.println(u + "\t" + cno(u));
-		}
-	}
 }

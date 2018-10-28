@@ -27,12 +27,15 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		int cno;
 		boolean seen;
 		Vertex parent;
+		static boolean cycle;
+		boolean black;
 
 		public DFSVertex(Vertex u) {
 			seen = false;
 			parent = null;
 			cno = 0;
-
+			cycle = false;
+			black = false;
 		}
 
 		public DFSVertex make(Vertex u) {
@@ -51,6 +54,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 			if (!get(u).seen) {
 				dfsVisit(u, (get(u).cno) + old_no + 1);
 				old_no = get(u).cno;
+
 			}
 		}
 	}
@@ -59,12 +63,15 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		get(u).seen = true;
 		get(u).cno = cno;
 		for (Edge e : g.incident(u)) {
-			if (!get(e.toVertex()).seen) {
-				get(e.toVertex()).parent = u;
-				dfsVisit(e.toVertex(), cno);
+			if (get(e.otherEnd(u)).seen && !get(e.otherEnd(u)).black) {
+				get(u).cycle = true;
+			} else {
+				get(e.otherEnd(u)).parent = u;
+				dfsVisit(e.otherEnd(u), cno);
 			}
 
 		}
+		get(u).black = true;
 		finish_list.add(u);
 
 	}
@@ -88,8 +95,8 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	public int connectedComponents() {
 		int max = 0;
 		for (Vertex u : g) {
-			if (get(u).cno > max) {
-				max = get(u).cno;
+			if (cno(u) > max) {
+				max = cno(u);
 			}
 		}
 		return max;
@@ -105,7 +112,12 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	public static List<Vertex> topologicalOrder1(Graph g) {
 		DFS d = new DFS(g);
 		d.dfs(g);
-		return d.topologicalOrder1();
+		if (DFS.DFSVertex.cycle) {
+			return null;
+		} else {
+			return d.topologicalOrder1();
+		}
+
 	}
 
 	// Find topological oder of a DAG using the second algorithm. Returns null if g
@@ -115,7 +127,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String string = "7 8   1 2 2   1 3 3   2 4 5   3 4 4   4 5 1   5 1 7   6 7 1   7 6 1 0";
+		String string = "5 4   1 2 2     2 4 5   3 4 4   4 5 1    0";
 		Scanner in;
 		// If there is a command line argument, use it as file from which
 		// input is read, otherwise use input from string.
@@ -132,18 +144,23 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		for (Vertex u : g) {
 			System.out.println(u + "\t" + d.cno(u));
 		}
+		String string1 = "5 4   1 2 2     2 4 5   3 4 4   4 5 1    0";
+		in = new Scanner(string1);
+		Graph g1 = Graph.readDirectedGraph(in);
+		List topological_order = DFS.topologicalOrder1(g1);
+		g1.printGraph(false);
+		if (topological_order == null) {
+			System.out.println("Cycle detected");
+		} else {
+			// Generate an iterator. Start just after the last element.
+			ListIterator li = topological_order.listIterator(topological_order.size());
 
-		List topological_order=DFS.topologicalOrder1(g);
-		
-		
-		// Generate an iterator. Start just after the last element.
-		ListIterator li = topological_order.listIterator(topological_order.size());
+			// Iterate in reverse.
+			System.out.println("Topological Order:");
+			while (li.hasPrevious()) {
 
-		// Iterate in reverse.
-		System.out.println("Topological Order:");
-		while(li.hasPrevious()) {
-			
-		  System.out.print(li.previous());
+				System.out.print(li.previous());
+			}
 		}
 	}
 

@@ -1,7 +1,9 @@
 package sak170006;
 
-/** Starter code for SP8
+/** SP8
  *  @author 
+ 	Sheetal Kadam(sak170006)
+	Pranita Hatte(prh170230)
  */
 
 // change to your netid
@@ -22,20 +24,21 @@ import java.util.Scanner;
 
 public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	List<Vertex> finish_list = new ArrayList<Vertex>();;
+	int top_num; // keep track of order added in finsihlist
 
 	public static class DFSVertex implements Factory {
 		int cno;
 		boolean seen;
 		Vertex parent;
-		static boolean cycle;
-		boolean black;
+		static boolean cycle; // graph has cycle or not
+		int top; // store the order of add in finishlist
 
 		public DFSVertex(Vertex u) {
 			seen = false;
 			parent = null;
 			cno = 0;
 			cycle = false;
-			black = false;
+			top = 0;
 		}
 
 		public DFSVertex make(Vertex u) {
@@ -45,37 +48,47 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 
 	public DFS(Graph g) {
 		super(g, new DFSVertex(null));
+		top_num = 0;
+
 	}
 
-	// check later
+// run dfs on graph g	
 	public void dfs(Graph g) {
-		int old_no = 0;
+		int old_no = 0; // keep track of last component number
+		top_num = g.size();
 		for (Vertex u : g) {
 			if (!get(u).seen) {
-				dfsVisit(u, (get(u).cno) + old_no + 1);
+				dfsVisit(u, (get(u).cno) + old_no + 1); // pass cno to dfsvist
 				old_no = get(u).cno;
 
 			}
 		}
 	}
 
+	// recursive function to traverse all vertices in same component
 	private void dfsVisit(Vertex u, int cno) {
 		get(u).seen = true;
 		get(u).cno = cno;
 		for (Edge e : g.incident(u)) {
-			if (get(e.otherEnd(u)).seen && !get(e.otherEnd(u)).black) {
+			// if the other end vertex is still being processed but has been visited then
+			// cycle
+			if (get(e.otherEnd(u)).seen && get(e.otherEnd(u)).top == 0) {
 				get(u).cycle = true;
-			} else {
+			}
+
+			else {
 				get(e.otherEnd(u)).parent = u;
 				dfsVisit(e.otherEnd(u), cno);
 			}
 
 		}
-		get(u).black = true;
+		// add to finishlist
+		get(u).top = top_num--;
 		finish_list.add(u);
 
 	}
 
+	// call dfs
 	public static DFS depthFirstSearch(Graph g) {
 
 		DFS d = new DFS(g);
@@ -95,6 +108,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	public int connectedComponents() {
 		int max = 0;
 		for (Vertex u : g) {
+			// total components is the last component number
 			if (cno(u) > max) {
 				max = cno(u);
 			}
@@ -102,7 +116,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		return max;
 	}
 
-	// After running the onnected components algorithm, the component no of each
+	// After running the connected components algorithm, the component no of each
 	// vertex can be queried.
 	public int cno(Vertex u) {
 		return get(u).cno;
@@ -112,7 +126,8 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	public static List<Vertex> topologicalOrder1(Graph g) {
 		DFS d = new DFS(g);
 		d.dfs(g);
-		if (DFS.DFSVertex.cycle && !g.isDirected()) {
+		// if graph has cycle or is undirected return null
+		if (DFS.DFSVertex.cycle || !g.isDirected()) {
 			return null;
 		} else {
 			return d.topologicalOrder1();
@@ -162,6 +177,38 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 				System.out.print(li.previous());
 			}
 		}
+
+	/* Sample output
+	 * 
+	 * ______________________________________________
+Graph: n: 5, m: 4, directed: false, Edge weights: false
+1 :  (1,2)
+2 :  (1,2) (2,4)
+3 :  (3,4)
+4 :  (2,4) (3,4) (4,5)
+5 :  (4,5)
+______________________________________________
+Number of components: 1
+u	cno
+1	1
+2	1
+3	1
+4	1
+5	1
+______________________________________________
+Graph: n: 5, m: 4, directed: true, Edge weights: false
+1 :  (1,2)
+2 :  (2,4)
+3 :  (3,4)
+4 :  (4,5)
+5 : 
+______________________________________________
+Topological Order:
+3451245
+
+*/
+		
+
 	}
 
 }

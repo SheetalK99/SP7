@@ -112,7 +112,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	public static List<Vertex> topologicalOrder1(Graph g) {
 		DFS d = new DFS(g);
 		d.dfs(g);
-		if (DFS.DFSVertex.cycle) {
+		if (DFS.DFSVertex.cycle && !g.isDirected()) {
 			return null;
 		} else {
 			return d.topologicalOrder1();
@@ -150,7 +150,7 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 		List topological_order = DFS.topologicalOrder1(g1);
 		g1.printGraph(false);
 		if (topological_order == null) {
-			System.out.println("Cycle detected");
+			System.out.println("Graph not a DAG");
 		} else {
 			// Generate an iterator. Start just after the last element.
 			ListIterator li = topological_order.listIterator(topological_order.size());

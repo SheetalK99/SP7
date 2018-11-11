@@ -1,4 +1,4 @@
-package sak170006;
+package sak1700062;
 
 /** SP8
  *  @author 
@@ -6,9 +6,9 @@ package sak170006;
 	Pranita Hatte(prh170230)
  */
 
-// change to your netid
 
 import rbk.Graph.Vertex;
+
 import rbk.Graph;
 import rbk.Graph.Edge;
 import rbk.Graph.GraphAlgorithm;
@@ -23,21 +23,21 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
-	List<Vertex> finish_list = new ArrayList<Vertex>();;
-	int top_num; // keep track of order added in finsihlist
+	LinkedList<Vertex> finishList = new LinkedList<Vertex>();;
+	int topnum; // keep track of order added in finsihlist
+	int cno; // number of components in graph
+	boolean cycle; // graph has cycle or not
 
 	public static class DFSVertex implements Factory {
 		int cno;
 		boolean seen;
 		Vertex parent;
-		static boolean cycle; // graph has cycle or not
 		int top; // store the order of add in finishlist
 
 		public DFSVertex(Vertex u) {
 			seen = false;
 			parent = null;
 			cno = 0;
-			cycle = false;
 			top = 0;
 		}
 
@@ -48,72 +48,116 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 
 	public DFS(Graph g) {
 		super(g, new DFSVertex(null));
-		top_num = 0;
+		topnum = 0;
+		cno = 0;
+		cycle = false;
 
 	}
 
+	// getter and setter methods to retrieve and update vertex properties
+	public boolean getSeen(Vertex u) {
+		return get(u).seen;
+	}
+
+	public void setSeen(Vertex u, boolean value) {
+		get(u).seen = value;
+	}
+
+	public Vertex getParent(Vertex u) {
+		return get(u).parent;
+	}
+
+	public void setParent(Vertex u, Vertex p) {
+		get(u).parent = p;
+	}
+
+	public static DFS stronglyConnectedComponents(Graph g) {
+		DFS d = new DFS(g);
+		d.dfs();
+		LinkedList<Vertex> list = d.finishList; // store the finish list as it will be lost
+		g.reverseGraph();
+		d.dfs(list); // rub dfs over finish list of original graph
+		g.reverseGraph();
+		return d;
+
+	}
+
+	private void dfs() {
+		dfs(g);
+	}
+
 // run dfs on graph g	
-	public void dfs(Graph g) {
-		int old_no = 0; // keep track of last component number
-		top_num = g.size();
-		for (Vertex u : g) {
+
+	private void dfs(Iterable<Vertex> iter) {
+
+		initialize(); // reset instance variables of graph
+		topnum = g.size();
+		for (Vertex u : iter) {
 			if (!get(u).seen) {
-				dfsVisit(u, (get(u).cno) + old_no + 1); // pass cno to dfsvist
-				old_no = get(u).cno;
+				cno++;
+				dfsVisit(u);
 
 			}
 		}
 	}
 
+	public void initialize() {
+		for (Vertex u : g) {
+			setSeen(u, false);
+			setParent(u, null);
+		}
+		finishList = new LinkedList<Vertex>();
+		cno = 0;
+	}
+
 	// recursive function to traverse all vertices in same component
-	private void dfsVisit(Vertex u, int cno) {
-		get(u).seen = true;
+	private void dfsVisit(Vertex u) {
+		setSeen(u, true);
 		get(u).cno = cno;
+
 		for (Edge e : g.incident(u)) {
 			// if the other end vertex is still being processed but has been visited then
 			// cycle
-			if (get(e.otherEnd(u)).seen && get(e.otherEnd(u)).top == 0) {
-				get(u).cycle = true;
+			if (getSeen(e.otherEnd(u)) && get(e.otherEnd(u)).top == 0) {
+				cycle = true;
 			}
 
-			else {
-				get(e.otherEnd(u)).parent = u;
-				dfsVisit(e.otherEnd(u), cno);
+			if (!getSeen(e.otherEnd(u))) {
+				setParent(e.otherEnd(u), u);
+				dfsVisit(e.otherEnd(u));
 			}
 
 		}
 		// add to finishlist
-		get(u).top = top_num--;
-		finish_list.add(u);
+		get(u).top = topnum--;
+		finishList.addFirst(u);
 
 	}
 
 	// call dfs
 	public static DFS depthFirstSearch(Graph g) {
-
 		DFS d = new DFS(g);
-		d.dfs(g);
-
+		d.dfs();
 		return d;
 	}
 
 	// Member function to find topological order
 	public List<Vertex> topologicalOrder1() {
-		return finish_list;
+		return finishList; // topological order is stored in finish list
 	}
 
 	// Find the number of connected components of the graph g by running dfs.
 	// Enter the component number of each vertex u in u.cno.
 	// Note that the graph g is available as a class field via GraphAlgorithm.
+
 	public int connectedComponents() {
-		int max = 0;
-		for (Vertex u : g) {
-			// total components is the last component number
-			if (cno(u) > max) {
-				max = cno(u);
-			}
-		}
-		return max;
+		return cno;
+	}
+
+	public static int connectedComponents(Graph g) {
+		DFS d = new DFS(g);
+
+		return d.connectedComponents();
 	}
 
 	// After running the connected components algorithm, the component no of each
@@ -125,14 +169,18 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	// Find topological oder of a DAG using DFS. Returns null if g is not a DAG.
 	public static List<Vertex> topologicalOrder1(Graph g) {
 		DFS d = new DFS(g);
-		d.dfs(g);
+		d.dfs();
 		// if graph has cycle or is undirected return null
-		if (DFS.DFSVertex.cycle || !g.isDirected()) {
+		if (d.isDAG()) {
 			return null;
 		} else {
 			return d.topologicalOrder1();
 		}
 
+	}
+
+	public boolean isDAG() {
+		return cycle || !g.isDirected();
 	}
 
 	// Find topological oder of a DAG using the second algorithm. Returns null if g
@@ -142,72 +190,32 @@ public class DFS extends GraphAlgorithm<DFS.DFSVertex> {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String string = "5 4   1 2 2     2 4 5   3 4 4   4 5 1    0";
+		String string = "9 13   1 2 2   2 3 3   2 4  5   3 3 4   3 6 1   4 2 2  4 7 7  5 1 1  5 4 4  6 8 8  7 5 5  8 9 9  9 6 6    0";
+
 		Scanner in;
 		// If there is a command line argument, use it as file from which
 		// input is read, otherwise use input from string.
 		in = args.length > 0 ? new Scanner(new File(args[0])) : new Scanner(string);
 
 		// Read graph from input
-		Graph g = Graph.readGraph(in);
+		Graph g = Graph.readDirectedGraph(in);
 		g.printGraph(false);
 
-		// DFS d = new DFS(g);
 		DFS d = depthFirstSearch(g);
+
+		System.out.println(topologicalOrder1(g));
 		int numcc = d.connectedComponents();
 		System.out.println("Number of components: " + numcc + "\nu\tcno");
 		for (Vertex u : g) {
 			System.out.println(u + "\t" + d.cno(u));
 		}
-		String string1 = "5 4   1 2 2     2 4 5   3 4 4   4 5 1    0";
-		in = new Scanner(string1);
-		Graph g1 = Graph.readDirectedGraph(in);
-		List topological_order = DFS.topologicalOrder1(g1);
-		g1.printGraph(false);
-		if (topological_order == null) {
-			System.out.println("Graph not a DAG");
-		} else {
-			// Generate an iterator. Start just after the last element.
-			ListIterator li = topological_order.listIterator(topological_order.size());
 
-			// Iterate in reverse.
-			System.out.println("Topological Order:");
-			while (li.hasPrevious()) {
+		DFS strongly_connected = DFS.stronglyConnectedComponents(g);
 
-				System.out.print(li.previous());
-			}
+		System.out.println("Strongly connected components are :" + strongly_connected.connectedComponents());
+		for (Vertex u : g) {
+			System.out.println(u + "\t" + strongly_connected.cno(u));
 		}
-
-	/* Sample output
-	 * 
-	 * ______________________________________________
-Graph: n: 5, m: 4, directed: false, Edge weights: false
-1 :  (1,2)
-2 :  (1,2) (2,4)
-3 :  (3,4)
-4 :  (2,4) (3,4) (4,5)
-5 :  (4,5)
-______________________________________________
-Number of components: 1
-u	cno
-1	1
-2	1
-3	1
-4	1
-5	1
-______________________________________________
-Graph: n: 5, m: 4, directed: true, Edge weights: false
-1 :  (1,2)
-2 :  (2,4)
-3 :  (3,4)
-4 :  (4,5)
-5 : 
-______________________________________________
-Topological Order:
-3451245
-
-*/
-		
 
 	}
 
